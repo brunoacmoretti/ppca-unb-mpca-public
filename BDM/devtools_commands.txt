@@ -1,0 +1,122 @@
+PUT /_enrich/policy/enrich-leak_dados_pessoas-policy
+{
+    "match": {
+        "indices": "leak_dados_pessoas",
+        "match_field": "cpf",
+        "enrich_fields": ["nome", "dt_nascimento", "rg", "tipo_sanguineo", "telefone", "email"]
+    }
+}
+
+PUT /_enrich/policy/enrich-leak_credenciais_plaintext-policy
+{
+    "match": {
+        "indices": "leak_credenciais_plaintext",
+        "match_field": "email",
+        "enrich_fields": ["usuario", "senha"]
+    }
+}
+
+PUT /_enrich/policy/enrich-leak_credenciais_hash-policy
+{
+    "match": {
+        "indices": "leak_credenciais_hash",
+        "match_field": "email",
+        "enrich_fields": ["username", "password", "hash_type"]
+    }
+}
+
+POST /_enrich/policy/enrich-leak_dados_pessoas-policy/_execute
+POST /_enrich/policy/enrich-leak_credenciais_plaintext-policy/_execute
+POST /_enrich/policy/enrich-leak_credenciais_hash-policy/_execute
+
+PUT /_ingest/pipeline/autoridades_monitoradas_lookup
+{
+  "description" : "Enriquecimento de dados de Autoridades monitoradas",
+  "processors" : [
+    {
+      "enrich" : {
+        "policy_name": "enrich-leak_dados_pessoas-policy",
+        "field" : "cpf",
+        "target_field": "dados_pessoais_vazados",
+        "max_matches": "128"
+      }
+    },
+    {
+      "enrich" : {
+        "policy_name": "enrich-leak_credenciais_plaintext-policy",
+        "field" : "email",
+        "target_field": "credenciais_texto_em_claro",
+        "max_matches": "128"
+      }
+    },
+    {
+      "enrich" : {
+        "policy_name": "enrich-leak_credenciais_hash-policy",
+        "field" : "email",
+        "target_field": "credenciais_hash",
+        "max_matches": "128"
+      }
+    }
+  ]
+}
+
+PUT autoridades_monitoradas/_settings
+{
+  "index.default_pipeline": "autoridades_monitoradas_lookup"
+}
+
+PUT /autoridades_monitoradas/_doc/SoZ2jnkBPyWj80sRJMiT
+{
+  "cpf": "35026917895",
+  "nome": "Nome do Presidente",
+  "funcao": "Presidente da República",
+  "email": "lteixeira@gmail.com"
+}
+
+PUT /autoridades_monitoradas/_doc/S4Z2jnkBPyWj80sRJMiT
+{
+  "cpf": "46795328155",
+  "nome": "Nome do MD",
+  "funcao": "Ministro da Defesa",
+  "email": "mda-costa@ig.com.br"
+}
+
+PUT /autoridades_monitoradas/_doc/TIZ2jnkBPyWj80sRJMiT
+{
+  "cpf": "81395642737",
+  "nome": "Gen Ex CMT EB",
+  "funcao": "Comandante do Exército",
+  "email": "joao-felipe28@hotmail.com"
+}
+
+PUT /autoridades_monitoradas/_doc/TYZ2jnkBPyWj80sRJMiT
+{
+  "cpf": "14875692030",
+  "nome": "Nome do Reitor da UNB",
+  "funcao": "Reitor da Universidade de Brasília",
+  "email": "isabelly90@gmail.com"
+}
+
+PUT /autoridades_monitoradas/_doc/34026571980
+{
+  "cpf": "34026571980",
+  "nome": "Nome do Ministro da Economia",
+  "funcao": "Ministro da Economia",
+  "email": "knascimento@gmail.com"
+}
+
+GET autoridades_monitoradas/_doc/SoZ2jnkBPyWj80sRJMiT
+GET autoridades_monitoradas/_doc/S4Z2jnkBPyWj80sRJMiT
+GET autoridades_monitoradas/_doc/TIZ2jnkBPyWj80sRJMiT
+GET autoridades_monitoradas/_doc/TYZ2jnkBPyWj80sRJMiT
+GET autoridades_monitoradas/_doc/34026571980
+
+GET leak_dados_pessoas/_doc/qWlcjnkBPyWj80sRtHri
+
+
+
+
+
+
+
+
